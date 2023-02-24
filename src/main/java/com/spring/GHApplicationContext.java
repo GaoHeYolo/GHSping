@@ -8,6 +8,7 @@ public class GHApplicationContext {
         this.configClass=configClass;
 
         //解析配置类
+        //GHComponentScan注解--->扫描路径--->扫描
 
     }
 
