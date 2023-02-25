@@ -5,12 +5,15 @@ import com.gaohe.spring.annotation.GHComponent;
 import com.gaohe.spring.annotation.GHComponentScan;
 import com.gaohe.spring.annotation.GHScope;
 import com.gaohe.spring.interfacer.GHBeanNameAware;
+import com.gaohe.spring.interfacer.GHBeanPostProcessor;
 import com.gaohe.spring.interfacer.GHInitializingBean;
 
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,6 +23,7 @@ public class GHApplicationContext {
 
     private ConcurrentHashMap<String, Object> singletonObjects = new ConcurrentHashMap<>();//单例池
     private ConcurrentHashMap<String, GHBeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>();
+    private List<GHBeanPostProcessor> beanPostProcessorList = new ArrayList<>();
 
     public GHApplicationContext(Class configClass) {
         this.configClass = configClass;
@@ -31,7 +35,7 @@ public class GHApplicationContext {
         for (Map.Entry<String, GHBeanDefinition> entry : beanDefinitionMap.entrySet()) {
             String beanName = entry.getKey();
             GHBeanDefinition beanDefinition = entry.getValue();
-            if ("singleton".equals(beanDefinition.getScope())) {
+            if ("singleton".equals(beanDefinition.getScope())&&!GHBeanPostProcessor.class.isAssignableFrom(beanDefinition.getClazz())) {
                 Object bean = createBean(beanName, beanDefinition);
                 singletonObjects.put(beanName, bean);
             }
@@ -60,12 +64,25 @@ public class GHApplicationContext {
             if (instance instanceof GHBeanNameAware) {
                 ((GHBeanNameAware) instance).setBeanName(beanName);
             }
+
+            if (!(instance instanceof GHBeanPostProcessor)||!"singleton".equals(beanDefinition.getScope())||!(beanPostProcessorList.size()==0)){
+                for (GHBeanPostProcessor beanPostProcessor : beanPostProcessorList) {
+                    instance = beanPostProcessor.postProcessBeforeInitialization(instance,beanName);
+                }
+            }
+
             //初始化
             if (instance instanceof GHInitializingBean) {
                 try {
                     ((GHInitializingBean) instance).afterPropertiesSet();
                 } catch (Exception e) {
                     e.printStackTrace();
+                }
+            }
+
+            if (!(instance instanceof GHBeanPostProcessor)||!"singleton".equals(beanDefinition.getScope())||!(beanPostProcessorList.size()==0)){
+                for (GHBeanPostProcessor beanPostProcessor : beanPostProcessorList) {
+                    instance = beanPostProcessor.postProcessAfterInitialization(instance,beanName);
                 }
             }
 
@@ -106,7 +123,6 @@ public class GHApplicationContext {
                             //BeanDefinition--->Bean的定义
                             GHComponent componentAnnotation = clazz.getDeclaredAnnotation(GHComponent.class);
                             String beanName = componentAnnotation.value();
-
                             GHBeanDefinition beanDefinition = new GHBeanDefinition();
                             beanDefinition.setClazz(clazz);
                             if (clazz.isAnnotationPresent(GHScope.class)) {
@@ -115,8 +131,15 @@ public class GHApplicationContext {
                             } else {
                                 beanDefinition.setScope("singleton");
                             }
-
                             beanDefinitionMap.put(beanName, beanDefinition);
+                            if (GHBeanPostProcessor.class.isAssignableFrom(clazz)) {
+                                if (beanDefinition.getScope().equals("singleton")){
+                                    Object bean = createBean(beanName, beanDefinition);
+                                    singletonObjects.put(beanName, bean);
+                                }
+                                GHBeanPostProcessor instance = (GHBeanPostProcessor) getBean(beanName);
+                                beanPostProcessorList.add(instance);
+                            }
                         }
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();

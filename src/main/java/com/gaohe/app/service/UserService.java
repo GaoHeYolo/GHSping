@@ -10,8 +10,27 @@ public class UserService implements GHInitializingBean {
     @GHAutowired
     private OrderService orderService;
 
+    private String name;
+
+    public OrderService getOrderService() {
+        return orderService;
+    }
+
+    public void setOrderService(OrderService orderService) {
+        this.orderService = orderService;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public void test(){
         System.out.println(orderService);
+        System.out.println(name);
     }
 
     @Override
