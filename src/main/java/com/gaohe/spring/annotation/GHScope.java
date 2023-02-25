@@ -1,4 +1,4 @@
-package com.spring;
+package com.gaohe.spring.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface GHComponentScan {
+public @interface GHScope {
 
-    String value() default "";
+    String value();
 }

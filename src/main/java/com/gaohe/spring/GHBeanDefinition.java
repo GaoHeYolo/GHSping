@@ -1,4 +1,4 @@
-package com.spring;
+package com.gaohe.spring;
 
 public class GHBeanDefinition {
 
