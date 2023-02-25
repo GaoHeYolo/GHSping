@@ -6,6 +6,8 @@ public class Test {
     public static void main(String[] args) {
         GHApplicationContext applicationContext = new GHApplicationContext(AppConfig.class);
 
-        Object userService = applicationContext.getBean("userService");
+        System.out.println(applicationContext.getBean("userService"));
+        System.out.println(applicationContext.getBean("userService"));
+        System.out.println(applicationContext.getBean("userService"));
     }
 }

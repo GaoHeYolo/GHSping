@@ -1,7 +1,8 @@
 package com.gaohe.service;
 
-import com.spring.Component;
+import com.spring.GHComponent;
+import com.spring.GHScope;
 
-@Component("userService")
+@GHComponent("userService")
 public class UserService {
 }
